@@ -1,0 +1,177 @@
+---
+title: 'Disciplina: Teste de hipÃ³teses e anÃ¡lises univariadas paramÃ©tricas'
+author: "Luciana Franci - AnÃ¡lises univariadas"
+date: "11 de dezembro de 2017"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+Antes de tudo, lembre-se de definir o seu local de diretório!
+
+Exercício 1:
+Queremos saber se as condições de água e luz afetam a germinação das sementes. Para isso, montamos um experimento com três tratamentos diferentes com cinco réplicas cada:
+1. Sementes alocadas em papel toalha seco na luz
+2. Sementes alocadas em papel toalha úmido e luz
+3. Sementes alocadas em papel toalha úmido sem luz
+
+A foto abaixo mostra as sementes após uma semana de tratamento.
+```{r echo=FALSE}
+knitr::include_graphics("J:/Trabalho/Disciplinas/Disciplina Delineamento amostral 2017/Aula 1/exercicio_1.png")
+
+```
+
+Após uma semana, o material foi seco e pesado (gramas), e temos os resultados no arquivo "exercicio_1.csv".
+```{r}
+sementes <- read.csv("exercicio_1.csv", header = T, sep = ";")
+head(sementes)
+```
+
+Atividades:
+1. Sabendo a pergunta do experimento, qual a hipotese nula?
+2. Qual análise estatística é mais adequada para testarmos a hipótese?
+3. Faça a análise estatística adequada e descreva o resultado obtido. Não esqueça de testar as premissas das análises!
+4. Faça um gráfico de peso por tratamento.
+
+```{r}
+str(sementes)
+
+#3.
+sementes_anova <- aov(peso ~ tratamento, data = sementes)
+summary(sementes_anova)
+
+shapiro.test(residuals(sementes_anova))
+plot(residuals(sementes_anova))
+
+TukeyHSD(sementes_anova)
+
+#4.
+boxplot(sementes$peso ~ sementes$tratamento, names = c("Tratamento 1", "Tratamento 2", "Tratamento 3"),
+        ylab = "Peso seco das sementes(g)")
+```
+
+Exercício 2 (retirado de https://ib-bioii.wikispaces.com):
+Um pesquisador notou que, no deserto, árvores nativas do gênero Prosopis hospedavam diferentes quantidades da planta parasita erva-de-passarinho (Viscum album). Indivíduos de Prosopis em áreas com distúrbios tendem a ter menor frequência de plantas parasitas do que indivíduos vivendo em áreas conservadas. O pesquisador resolveu, então, testar se realmente há diferença na quantidade de parasitas entre as ávores em locais com diferentes estados de conservação.
+Ele levantou a seguinte pergunta:
+Há maior frequência de erva-de-passarinho em na área sem distúrbio que na área perturbada?
+Para responder essa pergunta, o pesquisador contou o número de ervas-de-passarinho em 20 árvores, 10 em área perturbada e 10 em área conservada. Os dados coletados estão no arquivo "exercicio_2.csv"
+
+```{r}
+arvores <- read.csv("exercicio_2.csv", header = T, sep = ";")
+head(arvores)
+```
+
+Atividades:
+1. Qual a hipótese do pesquisador?
+2. Qual análise é mais adequada para testar a hipótese?
+3. Faça análise e descreva o resultado obtido. Não esqueça de testar as premissas!
+4. Faça um gráfico de densidade de erva-de-passarinho por local de estudo.
+```{r echo = FALSE}
+shapiro.test(arvores$area_conservada)
+plot(arvores$area_conservada)
+shapiro.test(arvores$area_perturbada)
+plot(arvores$area_perturbada)
+#1.
+arvores_freq <- c(sum(arvores$area_conservada), sum(arvores$area_perturbada))
+
+chisq.test(arvores_freq)
+
+#2.
+boxplot(arvores$area_conservada, arvores$area_perturbada, names = c("Área conservada", "Área perturbada"),
+        ylab = "Densidade de erva-de-passarinho")
+
+```
+
+Exercicio 3:
+Baseado no artigo: Pereira, I.M. 2003. Use-history effects on structure and flora of Caatinga. Biotropica 35(2): 154-165
+
+Pereira coletou dados de árvores em áreas de Caatinga no Brasil. Ele anotou a espécie das árvores, se possuia apenas um tronco dominante ou vários troncos, e o histórico de uso da terra do local.Os dados estão no arquivo "Brazil_tree_density.csv":
+```{r}
+caatinga <- read.csv("Brazil_tree_density.csv", header = T, sep = ";")
+head(caatinga)
+```
+A coluna 'habit' indica o hábito da planta:
+DT = tronco dominante
+ST = muitos troncos
+
+As colunas abaixo indicam a densidade relativa de cada espécie na seguintes áreas:
+LD = preservada
+GF = pasto
+OR = regeneração avançada (mais de 30 anos)
+NR = regeneração recente (20 anos)
+
+Atividade
+1. Com base nos dados coletados por Pereira, descubra se há mais árvores na em áreas de regeneração avançada ou em áreas de regeneração recente.
+2. Faça um gráfico mostrando os resultados.
+
+```{r}
+#1.
+shapiro.test(caatinga$OR)
+plot(caatinga$OR)
+shapiro.test(caatinga$NR)
+plot(caatinga$NR)
+
+wilcox.test(caatinga$OR, caatinga$NR, paired = TRUE, alternative = "two.sided")
+wilcox.test(caatinga$OR, caatinga$NR, paired = TRUE, alternative = "less")
+wilcox.test(caatinga$OR, caatinga$NR, paired = TRUE, alternative = "greater")
+
+#2.
+boxplot(caatinga$OR, caatinga$NR)
+
+```
+
+
+Exercício 4:
+Um pesquisador coletou dados de altura média de plantas em uma área de borda, uma de interior de mata e uma de pasto.
+Os dados coletados estão no arquivo "Plantas_local.csv".
+```{r}
+plantas <- read.csv("Plantas_local.csv", header = TRUE, sep = ";")
+str(plantas)
+
+```
+Atividades:
+1. Identifique se a média da altura das plantas difere entre as áreas.
+2. Faça um gráfico mostrando os resultados.
+
+```{r}
+#1.
+altura.aov <- aov(altura ~ local, data = plantas)
+summary(altura.aov)
+
+shapiro.test(residuals(altura.aov))
+plot(residuals(altura.aov))
+
+#Fazendo teste de Kruskal-Wallis
+
+altura.k <- kruskal.test(altura ~ local, data = plantas)
+altura.k
+
+library(dunn.test)
+
+dunn.test(plantas$altura, plantas$local, method = "bonferroni")
+
+
+#2.
+boxplot(plantas$altura ~ plantas$local, ylab = "Altura de plantas (m)",
+        names = c("Borda", "Mata", "Pasto"))
+```
+
+Exercício 5:
+1.Usando o banco de dados 'iris', teste se o comprimento de pétalas do gênero Iris depende da largura da pétula.
+2. Faça um gráfico incluindo a reta da regressão.
+
+```{r}
+data(iris)
+#1
+iris_lm <- lm(iris$Petal.Length ~ iris$Petal.Width)
+summary(iris_lm)
+
+shapiro.test(residuals(iris_lm))
+
+#2.
+plot(iris$Petal.Length ~ iris$Petal.Width, xlab = "Largura da pétala (cm)",
+     ylab = "Comprimento da pétala (cm)")
+#Vamos colocar a linha da regressao ao grafico
+abline(iris_lm)
+
+```
